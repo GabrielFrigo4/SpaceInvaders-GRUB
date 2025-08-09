@@ -1,14 +1,22 @@
 linux:
-	c++ ./source/*.cpp -I./include/ -o game
+	mkdir -p ./output
+	c++ ./source/*.cpp -I./include/ -lSDL3 -o ./output/game
 
 msys2:
-	c++ ./source/*.cpp -I./include/ -o game
+	mkdir -p ./output
+	c++ ./source/*.cpp -I./include/ -lSDL3 -o ./output/game
 
 setup-deb:
-	apt install sdl3 openal opencl
+	apt install -y libsdl3-dev
+	apt install -y libopenal-dev
 
 setup-arch:
-	pacman -S sdl3 openal opencl
+	pacman --needed --noconfirm -S sdl3
+	pacman --needed --noconfirm -S openal
 
 setup-msys2:
-	pacman -S sdl3 openal opencl
+	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-sdl3
+	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-openal
+
+clear:
+	rm -r -f ./output
