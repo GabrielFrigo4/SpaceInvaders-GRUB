@@ -1,8 +1,9 @@
 # SpaceInvaders-GRUB
  Space Invaders - GRUB
 
-
-## Tech stack
-- C#
-- YYY
-- ZZZ
+## Tech Stack
+- C++
+- SDL3
+- OpenGL
+- OpenAL
+- OpenCL
