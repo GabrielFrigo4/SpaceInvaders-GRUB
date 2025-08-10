@@ -2,11 +2,12 @@
  __Space Invaders - GRUB__
 
 ## Tech Stack
- - C++
+ - C/C++
  - SDL3
  - OpenGL
  - OpenAL
  - OpenCL
+ - FreeType
 
 ## Documentation
  - [GNU Compiler Collection](https://gcc.gnu.org/onlinedocs/)
