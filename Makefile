@@ -35,20 +35,20 @@ setup-deb:
 
 setup-arch:
 	# SDL3
-	pacman --needed --noconfirm -S sdl3
+	yay --needed --noconfirm -S sdl3
 	# OpenGL
-	pacman --needed --noconfirm -S glm
-	pacman --needed --noconfirm -S cglm
-	pacman --needed --noconfirm -S glew
+	yay --needed --noconfirm -S glm
+	yay --needed --noconfirm -S cglm
+	yay --needed --noconfirm -S glew
 	# OpenAL
-	pacman --needed --noconfirm -S openal
+	yay --needed --noconfirm -S openal
 	# OpenCL
-	pacman --needed --noconfirm -S opencl-headers
-	pacman --needed --noconfirm -S opencl-clhpp
-	pacman --needed --noconfirm -S opencl-icd-loader
-	pacman --needed --noconfirm -S libclc
+	yay --needed --noconfirm -S opencl-headers
+	yay --needed --noconfirm -S opencl-clhpp
+	yay --needed --noconfirm -S opencl-icd-loader
+	yay --needed --noconfirm -S libclc
 	# FreeType
-	pacman --needed --noconfirm -S freetype2
+	yay --needed --noconfirm -S freetype2
 
 setup-msys2:
 	# SDL3
