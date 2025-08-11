@@ -48,7 +48,7 @@ setup-arch:
 	pacman --needed --noconfirm -S opencl-icd-loader
 	pacman --needed --noconfirm -S libclc
 	# FreeType
-	pacman --needed --noconfirm -S freetype
+	pacman --needed --noconfirm -S freetype2
 
 setup-msys2:
 	# SDL3
