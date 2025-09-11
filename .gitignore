@@ -1,6 +1,10 @@
 # VS Code Files
 .vscode/
 
+# Binary Files
+_bin/
+_obj/
+
 # Prerequisites
 *.d
 

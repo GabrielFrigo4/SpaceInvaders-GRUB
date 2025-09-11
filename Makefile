@@ -22,8 +22,8 @@ SOURCES_C := $(wildcard $(SOURCE_DIR)/*.c)
 SOURCES_CPP := $(wildcard $(SOURCE_DIR)/*.cpp)
 
 # --- Configuração do Linker ---
-LIBS_LINUX := -lsdl3 -lglew -lgl
-LIBS_MSYS2 := -lsdl3 -lglew32 -lopengl32
+LIBS_LINUX := -lSDL3 -lGLEW -lGL
+LIBS_MSYS2 := -lSDL3 -lGLEW32 -lOPENGL32
 
 # --- Regras (Targets) ---
 .PHONY: all
