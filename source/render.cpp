@@ -92,9 +92,11 @@ bool render_init(SDL_Window *window)
 
 	glBindVertexArray(rectangle_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, rectangle_vbo);
+
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2, NULL, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -123,7 +125,7 @@ void render_rectangle(float r, float g, float b, float a, float x1, float y1, fl
 	float projection[4][4] = {
 		{2.0f / width, 0.0f, 0.0f, -1.0f},
 		{0.0f, 2.0f / height, 0.0f, -1.0f},
-		{0.0f, 0.0f, -1.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f, 0.0f},
 		{0.0f, 0.0f, 0.0f, 1.0f}};
 	projection[1][1] *= -1.0f;
 	projection[1][3] *= -1.0f;
@@ -135,9 +137,11 @@ void render_rectangle(float r, float g, float b, float a, float x1, float y1, fl
 		min_x, min_y, max_x, max_y, max_x, min_y,
 		min_x, min_y, min_x, max_y, max_x, max_y};
 
-	glBindVertexArray(rectangle_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, rectangle_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(rectangle_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
 }

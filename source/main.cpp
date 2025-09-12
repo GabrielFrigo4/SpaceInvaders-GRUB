@@ -75,11 +75,13 @@ int main(void)
 
 		render_rectangle(1.0f, 0.0f, 0.0f, 1.0f, 300, 250, 500, 450);
 		render_rectangle(0.0f, 1.0f, 0.0f, 1.0f, 200, 150, 400, 350);
-		render_rectangle(0.0f, 0.0f, 1.0f, 1.0f, 100, 050, 300, 250);
+		render_rectangle(0.0f, 0.0f, 1.0f, 1.0f, 100,  50, 300, 250);
+		render_rectangle(1.0f, 1.0f, 1.0f, 1.0f,   0,   0,  25,  25);
+		render_rectangle(0.0f, 0.0f, 0.0f, 1.0f,   WINDOW_WIDTH - 25,   WINDOW_HEIGHT - 25,  WINDOW_WIDTH,  WINDOW_HEIGHT);
 
 		render_rectangle(0.5f, 0.5f, 0.5f, 0.25f, 350, 250, 450, 450);
 		render_rectangle(0.5f, 0.5f, 0.5f, 0.25f, 250, 150, 350, 350);
-		render_rectangle(0.5f, 0.5f, 0.5f, 0.25f, 150, 050, 250, 250);
+		render_rectangle(0.5f, 0.5f, 0.5f, 0.25f, 150,  50, 250, 250);
 
 		SDL_GL_SwapWindow(window);
 	}
