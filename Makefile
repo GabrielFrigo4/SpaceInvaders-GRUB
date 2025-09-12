@@ -22,8 +22,8 @@ SOURCES_C := $(wildcard $(SOURCE_DIR)/*.c)
 SOURCES_CPP := $(wildcard $(SOURCE_DIR)/*.cpp)
 
 # --- Configuração do Linker ---
-LIBS_LINUX := -lSDL3 -lGLEW -lGL
-LIBS_MSYS2 := -lSDL3 -lGLEW32 -lOPENGL32
+LIBS_LINUX := -lSDL3 -lGL
+LIBS_MSYS2 := -lSDL3 -lOPENGL32
 
 # --- Regras (Targets) ---
 .PHONY: all
@@ -37,7 +37,7 @@ linux msys2: $(TARGET_EXE)
 $(TARGET_EXE): $(SOURCES_CPP) | $(BIN_DIR)
 	@echo "==> Compilando para o alvo '$(MAKECMDGOALS)'..."
 	@echo "==> Usando bibliotecas: $(LIBS)"
-	$(CPP) $(CPPFLAGS) $(SOURCES_CPP) $(LIBS) -o $@
+	$(CPP) $(CPPFLAGS) $(SOURCES_CPP) $(SOURCES_C) $(LIBS) -o $@
 	@echo "==> Executável criado com sucesso em '$@'!"
 
 $(BIN_DIR):
@@ -73,7 +73,6 @@ setup-deb:
 	@echo "==> Baixando OpenGL..."
 	sudo apt install -y libglm-dev
 	sudo apt install -y libcglm-dev
-	sudo apt install -y libglew-dev
 	@echo "==> Baixando OpenAL..."
 	sudo apt install -y libopenal-dev
 	@echo "==> Baixando OpenCL..."
@@ -90,7 +89,6 @@ setup-arch:
 	@echo "==> Baixando OpenGL..."
 	yay --needed --noconfirm -S glm
 	yay --needed --noconfirm -S cglm
-	yay --needed --noconfirm -S glew
 	@echo "==> Baixando OpenAL..."
 	yay --needed --noconfirm -S openal
 	@echo "==> Baixando OpenCL..."
@@ -108,7 +106,6 @@ setup-msys2:
 	@echo "==> Baixando OpenGL..."
 	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-glm
 	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-cglm
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-glew
 	@echo "==> Baixando OpenAL..."
 	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-openal
 	@echo "==> Baixando OpenCL..."

@@ -1,5 +1,5 @@
 #include <SDL3/SDL.h>
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include "logging.hpp"
 #include "render.hpp"
 

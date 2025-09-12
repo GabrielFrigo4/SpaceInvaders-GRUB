@@ -1,5 +1,5 @@
 #include <SDL3/SDL.h>
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include "logging.hpp"
 #include "render.hpp"
 
@@ -38,11 +38,10 @@ int main(void)
 		return 1;
 	}
 
-	glewExperimental = GL_TRUE;
-	GLenum glew_status = glewInit();
-	if (glew_status != GLEW_OK)
+	int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	if (version == 0)
 	{
-		LOG_ERRO("Não foi possível inicializar GLEW: %s", glewGetErrorString(glew_status));
+		LOG_ERRO("Não foi possível inicializar o GLAD");
 		SDL_GL_DestroyContext(context);
 		SDL_DestroyWindow(window);
 		SDL_Quit();
@@ -51,8 +50,8 @@ int main(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	LOG_INFO("OpenGL version: %s", glGetString(GL_VERSION));
-	LOG_INFO("GLEW version: %s", glewGetString(GLEW_VERSION));
+	LOG_INFO("OpenGL Versão: %s", glGetString(GL_VERSION));
+	LOG_INFO("GLAD Versão: %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 	if (!render_init(window))
 	{
 		SDL_Log(ERRO("Não foi possível inicializar o render"));
