@@ -30,6 +30,9 @@
 ### OpenGL
  - [OpenGL API Documentation](https://docs.gl/)
  - [Learn OpenGL](https://learnopengl.com/Getting-started/OpenGL)
+ - [GLAD 2](https://gen.glad.sh/)
+ - [GLAD 1](https://glad.dav1d.de/)
+ - [GLAD](https://github.com/Dav1dde/glad)
 
 ### OpenAL
  - [OpenAL Programmer's Guide](https://github.com/kcat/openal-soft/wiki/Programmer's-Guide)
