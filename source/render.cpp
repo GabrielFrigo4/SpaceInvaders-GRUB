@@ -23,7 +23,9 @@ std::string read_shader_file(const char *file_path)
 }
 
 SDL_Window *sdl_window = nullptr;
-GLuint rectangle_shader_program = 0;
+GLuint polygon_shader_program = 0;
+GLuint triangle_vao = 0;
+GLuint triangle_vbo = 0;
 GLuint rectangle_vao = 0;
 GLuint rectangle_vbo = 0;
 
@@ -31,8 +33,8 @@ bool render_init(SDL_Window *window)
 {
 	sdl_window = window;
 
-	std::string vertex_shader_src = read_shader_file("shader/rectangle.vert");
-	std::string fragment_shader_src = read_shader_file("shader/rectangle.frag");
+	std::string vertex_shader_src = read_shader_file("shader/polygon.vert");
+	std::string fragment_shader_src = read_shader_file("shader/polygon.frag");
 
 	if (vertex_shader_src.empty() || fragment_shader_src.empty())
 	{
@@ -70,20 +72,20 @@ bool render_init(SDL_Window *window)
 	}
 	LOG_INFO("fragment_shader criado com ID: %u", fragment_shader);
 
-	rectangle_shader_program = glCreateProgram();
-	glAttachShader(rectangle_shader_program, vertex_shader);
-	glAttachShader(rectangle_shader_program, fragment_shader);
-	glLinkProgram(rectangle_shader_program);
-	glGetProgramiv(rectangle_shader_program, GL_LINK_STATUS, &success);
+	polygon_shader_program = glCreateProgram();
+	glAttachShader(polygon_shader_program, vertex_shader);
+	glAttachShader(polygon_shader_program, fragment_shader);
+	glLinkProgram(polygon_shader_program);
+	glGetProgramiv(polygon_shader_program, GL_LINK_STATUS, &success);
 	if (!success)
 	{
-		glGetProgramInfoLog(rectangle_shader_program, log_len, NULL, log_info);
+		glGetProgramInfoLog(polygon_shader_program, log_len, NULL, log_info);
 		LOG_ERRO("LINKAGEM FALHOU (Shader Program):\n%s", log_info);
 		return false;
 	}
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
-	LOG_INFO("rectangle_shader_program criado com ID: %u", rectangle_shader_program);
+	LOG_INFO("polygon_shader_program criado com ID: %u", polygon_shader_program);
 
 	glGenVertexArrays(1, &rectangle_vao);
 	glGenBuffers(1, &rectangle_vbo);
@@ -92,11 +94,22 @@ bool render_init(SDL_Window *window)
 
 	glBindVertexArray(rectangle_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, rectangle_vbo);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float) * 2, NULL, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
+	glGenVertexArrays(1, &triangle_vao);
+	glGenBuffers(1, &triangle_vbo);
+	LOG_INFO("triangle_vao criado com ID: %u", triangle_vao);
+	LOG_INFO("triangle_vbo criado com ID: %u", triangle_vbo);
+
+	glBindVertexArray(triangle_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
+	glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(float) * 2, NULL, GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -104,23 +117,18 @@ bool render_init(SDL_Window *window)
 	return true;
 }
 
-void render_rectangle(float r, float g, float b, float a, float x1, float y1, float x2, float y2)
+void render_triangle(float r, float g, float b, float a, float x1, float y1, float x2, float y2, float x3, float y3)
 {
-	if (rectangle_shader_program == 0 || rectangle_vao == 0 || rectangle_vbo == 0)
+	if (polygon_shader_program == 0 || triangle_vao == 0 || triangle_vbo == 0)
 	{
-		LOG_ERRO("Tentando desenhar com objetos OpenGL invalidos! IDs -> shader: %u, rectangle_vao: %u, rectangle_vbo: %u", rectangle_shader_program, rectangle_vao, rectangle_vbo);
+		LOG_ERRO("Tentando desenhar com objetos OpenGL invalidos! IDs -> shader: %u, triangle_vao: %u, triangle_vbo: %u", polygon_shader_program, triangle_vao, triangle_vbo);
 		exit(1);
 	}
-
-	const float min_x = std::min(x1, x2);
-	const float max_x = std::max(x1, x2);
-	const float min_y = std::min(y1, y2);
-	const float max_y = std::max(y1, y2);
 
 	int width, height;
 	SDL_GetWindowSize(sdl_window, &width, &height);
 
-	glUseProgram(rectangle_shader_program);
+	glUseProgram(polygon_shader_program);
 
 	float projection[4][4] = {
 		{2.0f / width, 0.0f, 0.0f, -1.0f},
@@ -130,12 +138,50 @@ void render_rectangle(float r, float g, float b, float a, float x1, float y1, fl
 	projection[1][1] *= -1.0f;
 	projection[1][3] *= -1.0f;
 
-	glUniformMatrix4fv(glGetUniformLocation(rectangle_shader_program, "projection"), 1, GL_TRUE, &projection[0][0]);
-	glUniform4f(glGetUniformLocation(rectangle_shader_program, "rectangleColor"), r, g, b, a);
+	glUniformMatrix4fv(glGetUniformLocation(polygon_shader_program, "projection"), 1, GL_TRUE, &projection[0][0]);
+	glUniform4f(glGetUniformLocation(polygon_shader_program, "rectangleColor"), r, g, b, a);
 
 	float vertices[] = {
-		min_x, min_y, max_x, max_y, max_x, min_y,
-		min_x, min_y, min_x, max_y, max_x, max_y};
+		x1, y1,
+		x2, y2,
+		x3, y3};
+
+	glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(triangle_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
+
+void render_rectangle(float r, float g, float b, float a, float x1, float y1, float x2, float y2)
+{
+	if (polygon_shader_program == 0 || rectangle_vao == 0 || rectangle_vbo == 0)
+	{
+		LOG_ERRO("Tentando desenhar com objetos OpenGL invalidos! IDs -> shader: %u, rectangle_vao: %u, rectangle_vbo: %u", polygon_shader_program, rectangle_vao, rectangle_vbo);
+		exit(1);
+	}
+
+	int width, height;
+	SDL_GetWindowSize(sdl_window, &width, &height);
+
+	glUseProgram(polygon_shader_program);
+
+	float projection[4][4] = {
+		{2.0f / width, 0.0f, 0.0f, -1.0f},
+		{0.0f, 2.0f / height, 0.0f, -1.0f},
+		{0.0f, 0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f, 1.0f}};
+	projection[1][1] *= -1.0f;
+	projection[1][3] *= -1.0f;
+
+	glUniformMatrix4fv(glGetUniformLocation(polygon_shader_program, "projection"), 1, GL_TRUE, &projection[0][0]);
+	glUniform4f(glGetUniformLocation(polygon_shader_program, "rectangleColor"), r, g, b, a);
+
+	float vertices[] = {
+		x1, y1, x2, y2, x2, y1,
+		x1, y1, x1, y2, x2, y2};
 
 	glBindBuffer(GL_ARRAY_BUFFER, rectangle_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
