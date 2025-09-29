@@ -22,19 +22,14 @@ std::string read_shader_file(const char *file_path)
 	return shader_stream.str();
 }
 
-SDL_Window *sdl_window = nullptr;
-GLuint polygon_shader_program = 0;
-GLuint triangle_vao = 0;
-GLuint triangle_vbo = 0;
-GLuint rectangle_vao = 0;
-GLuint rectangle_vbo = 0;
-
-bool render_init(SDL_Window *window)
+bool compile_shader(const char *vertex_shader_path, const char *fragment_shader_path, GLuint &shader_program)
 {
-	sdl_window = window;
+	const int log_len = 512;
+	char log_info[log_len];
+	int success;
 
-	std::string vertex_shader_src = read_shader_file("shader/polygon.vert");
-	std::string fragment_shader_src = read_shader_file("shader/polygon.frag");
+	std::string vertex_shader_src = read_shader_file(vertex_shader_path);
+	std::string fragment_shader_src = read_shader_file(fragment_shader_path);
 
 	if (vertex_shader_src.empty() || fragment_shader_src.empty())
 	{
@@ -42,15 +37,12 @@ bool render_init(SDL_Window *window)
 		return false;
 	}
 
-	const int log_len = 512;
-	char log_info[log_len];
 	const char *vertex_shader_code = vertex_shader_src.c_str();
 	const char *fragment_shader_code = fragment_shader_src.c_str();
 
 	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_shader_code, NULL);
 	glCompileShader(vertex_shader);
-	int success;
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
@@ -72,20 +64,43 @@ bool render_init(SDL_Window *window)
 	}
 	LOG_INFO("fragment_shader criado com ID: %u", fragment_shader);
 
-	polygon_shader_program = glCreateProgram();
-	glAttachShader(polygon_shader_program, vertex_shader);
-	glAttachShader(polygon_shader_program, fragment_shader);
-	glLinkProgram(polygon_shader_program);
-	glGetProgramiv(polygon_shader_program, GL_LINK_STATUS, &success);
+	shader_program = glCreateProgram();
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+	glLinkProgram(shader_program);
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
 	if (!success)
 	{
-		glGetProgramInfoLog(polygon_shader_program, log_len, NULL, log_info);
+		glGetProgramInfoLog(shader_program, log_len, NULL, log_info);
 		LOG_ERRO("LINKAGEM FALHOU (Shader Program):\n%s", log_info);
 		return false;
 	}
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
-	LOG_INFO("polygon_shader_program criado com ID: %u", polygon_shader_program);
+	LOG_INFO("shader_program criado com ID: %u", shader_program);
+
+	LOG_INFO("shader_compile() concluido com sucesso.");
+	return true;
+}
+
+SDL_Window *sdl_window = nullptr;
+GLuint polygon_shader_program = 0;
+GLuint triangle_vao = 0;
+GLuint triangle_vbo = 0;
+GLuint rectangle_vao = 0;
+GLuint rectangle_vbo = 0;
+GLuint texture_shader_program = 0;
+GLuint texture_vao = 0;
+GLuint texture_vbo = 0;
+
+bool polygon_init()
+{
+	LOG_INFO("Compilando Polygon Shader.");
+	if (!compile_shader("shader/polygon.vert", "shader/polygon.frag", polygon_shader_program))
+	{
+		LOG_ERRO("polygon_init() falhou. Erro na compilação do shader");
+		return false;
+	}
 
 	glGenVertexArrays(1, &rectangle_vao);
 	glGenBuffers(1, &rectangle_vbo);
@@ -113,7 +128,21 @@ bool render_init(SDL_Window *window)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	LOG_INFO("Render init concluido com sucesso.");
+	LOG_INFO("polygon_init() concluido com sucesso.");
+	return true;
+}
+
+bool render_init(SDL_Window *window)
+{
+	sdl_window = window;
+
+	if (!polygon_init())
+	{
+		LOG_ERRO("render_init() falhou. Erro na inicialização da seçã polygon do render");
+		return false;
+	}
+
+	LOG_INFO("render_init() concluido com sucesso.");
 	return true;
 }
 
