@@ -1,0 +1,10 @@
+BasedOnStyle: Microsoft
+
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+PenaltyBreakAssignment: 4096
+ColumnLimit: 96
+
+UseTab: ForIndentation
+IndentWidth: 4
+TabWidth: 4

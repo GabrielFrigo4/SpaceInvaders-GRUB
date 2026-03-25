@@ -1,0 +1,40 @@
+CompileFlags:
+  Add:
+    - -I../include
+    - -Wformat=2
+    - -Wall
+    - -Wextra
+    - -Wvla
+    - -Wpedantic
+    - -Wshadow
+    - -Wconversion
+    - -Wsign-conversion
+    - -Werror
+    - -Wno-cpp
+    - -Wno-missing-field-initializers
+    - -Wno-unknown-warning-option
+    - -D_DEFAULT_SOURCE
+    - -D_POSIX_C_SOURCE=202405L
+    - -D_FORTIFY_SOURCE=2
+
+---
+
+If:
+  PathMatch: .*\.(c|h)$
+CompileFlags:
+  Add: [-std=c23]
+
+---
+
+If:
+  PathMatch: .*\.(cpp|cxx|cc|hpp|hxx)$
+CompileFlags:
+  Add: [-std=c++23]
+  Remove: [-std=c23]
+
+---
+
+If:
+  PathMatch: .*\.h$
+CompileFlags:
+  Add: [-xc-header]
