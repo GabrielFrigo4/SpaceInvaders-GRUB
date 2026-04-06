@@ -1,43 +1,40 @@
-# --- Configuração do Projeto ---
-BIN_DIR := _bin
-OBJ_DIR := _obj
-
-SOURCE_DIR := source
-INCLUDE_DIR := include
-SHADER_DIR := shader
+BIN_DIR      := _bin
+OBJ_DIR      := _obj
+SOURCE_DIR   := source
+INCLUDE_DIR  := include
+SHADER_DIR   := shader
 RESOURCE_DIR := resource
-ASSETS_DIR := assets
+ASSETS_DIR   := assets
 
-TARGET_EXE := $(BIN_DIR)/space-invaders
+TARGET_EXE   := $(BIN_DIR)/space-invaders
 
-# --- Configuração do Compilador e Flags ---
-CC := gcc
-CCFLAGS := -std=c23 -O2 -I$(INCLUDE_DIR) -Wall -Wextra
+CC           := gcc
+CXX          := g++
 
-CPP := g++
-CPPFLAGS := -std=c++23 -O2 -I$(INCLUDE_DIR) -Wall -Wextra
+CFLAGS       := -std=c23 -O2 -fstack-protector-strong -fPIE -flto
+CXXFLAGS     := -std=c++23 -O2 -fstack-protector-strong -fPIE -flto
+WFLAGS       := -Wformat=2 -Wall -Wextra -Wvla -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Werror -Wno-cpp -Wno-missing-field-initializers -Wno-unknown-warning-option
+CPPFLAGS     := -I$(INCLUDE_DIR) -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=202405L -D_FORTIFY_SOURCE=2
+LDFLAGS      := -flto -pie -Wl,-z,relro,-z,now
 
-# --- Detecção Automática de Arquivos ---
-SOURCES_C := $(wildcard $(SOURCE_DIR)/*.c)
-SOURCES_CPP := $(wildcard $(SOURCE_DIR)/*.cpp)
+SOURCES_C    := $(wildcard $(SOURCE_DIR)/*.c)
+SOURCES_CPP  := $(wildcard $(SOURCE_DIR)/*.cpp)
 
-# --- Configuração do Linker ---
-LIBS_LINUX := -lSDL3 -lGL
-LIBS_MSYS2 := -lSDL3 -lOPENGL32
+LIBS_LINUX   := -lSDL3 -lGL
+LIBS_MSYS2   := -lSDL3 -lOPENGL32
 
-# --- Regras (Targets) ---
-.PHONY: all
+.PHONY: all linux msys2 export run clean setup-deb setup-arch setup-msys2
+
 all: linux
 
-.PHONY: linux msys2
 linux: LIBS = $(LIBS_LINUX)
 msys2: LIBS = $(LIBS_MSYS2)
 linux msys2: $(TARGET_EXE)
 
-$(TARGET_EXE): $(SOURCES_CPP) | $(BIN_DIR)
+$(TARGET_EXE): $(SOURCES_CPP) $(SOURCES_C) | $(BIN_DIR)
 	@echo "==> Compilando para o alvo '$(MAKECMDGOALS)'..."
 	@echo "==> Usando bibliotecas: $(LIBS)"
-	$(CPP) $(CPPFLAGS) $(SOURCES_CPP) $(SOURCES_C) $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(WFLAGS) $(CPPFLAGS) $(SOURCES_CPP) $(SOURCES_C) $(LDFLAGS) $(LIBS) -o $@
 	@echo "==> Executável criado com sucesso em '$@'!"
 
 $(BIN_DIR):
@@ -45,28 +42,20 @@ $(BIN_DIR):
 	mkdir -p "$@" "$@/$(SHADER_DIR)" "$@/$(ASSETS_DIR)" 
 	cp -r $(SHADER_DIR)/*.frag $@/$(SHADER_DIR)
 	cp -r $(SHADER_DIR)/*.vert $@/$(SHADER_DIR)
-#	cp -r $(ASSETS_DIR)/*.wav $@/$(ASSETS_DIR)
-#	cp -r $(ASSETS_DIR)/*.png $@/$(ASSETS_DIR)
 
-# --- Regras Utilitárias ---
-.PHONY: export
 export: all
 	@echo "==> Exportando dependências MSYS2..."
 	msys-export.cmd "$(TARGET_EXE).exe" --dest "$(BIN_DIR)" --msys "ucrt64" --hide
 
-.PHONY: run
 run: all
 	@echo "==> Executando o programa..."
 	./$(TARGET_EXE)
 
-.PHONY: clean
 clean:
 	@echo "==> Limpando arquivos de build..."
 	rm -rf $(BIN_DIR) $(OBJ_DIR)
 	@echo "==> Limpeza concluída."
 
-# --- Regras Bibliotecas ---
-.PHONY: setup-deb
 setup-deb:
 	@echo "==> Baixando SDL3..."
 	sudo apt install -y libsdl3-dev
@@ -82,7 +71,6 @@ setup-deb:
 	@echo "==> Baixando FreeType..."
 	sudo apt install -y libfreetype-dev
 
-.PHONY: setup-arch
 setup-arch:
 	@echo "==> Baixando SDL3..."
 	yay --needed --noconfirm -S sdl3
@@ -99,7 +87,6 @@ setup-arch:
 	@echo "==> Baixando FreeType..."
 	yay --needed --noconfirm -S freetype2
 
-.PHONY: setup-msys2
 setup-msys2:
 	@echo "==> Baixando SDL3..."
 	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-sdl3
