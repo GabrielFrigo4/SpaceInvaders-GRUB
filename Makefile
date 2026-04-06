@@ -6,8 +6,6 @@ SHADER_DIR   := shader
 RESOURCE_DIR := resource
 ASSETS_DIR   := assets
 
-TARGET_EXE   := $(BIN_DIR)/space-invaders
-
 CC           := gcc
 CXX          := g++
 
@@ -15,26 +13,40 @@ CFLAGS       := -std=c23 -O2 -fstack-protector-strong -fPIE -flto
 CXXFLAGS     := -std=c++23 -O2 -fstack-protector-strong -fPIE -flto
 WFLAGS       := -Wformat=2 -Wall -Wextra -Wvla -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Werror -Wno-cpp -Wno-missing-field-initializers -Wno-unknown-warning-option
 CPPFLAGS     := -I$(INCLUDE_DIR) -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=202405L -D_FORTIFY_SOURCE=2
-LDFLAGS      := -flto -pie -Wl,-z,relro,-z,now
+LDFLAGS      := -flto
+
+LIBS_COMMON  := -lSDL3
 
 SOURCES_C    := $(wildcard $(SOURCE_DIR)/*.c)
 SOURCES_CPP  := $(wildcard $(SOURCE_DIR)/*.cpp)
 
-LIBS_LINUX   := -lSDL3 -lGL
-LIBS_MSYS2   := -lSDL3 -lOPENGL32
+UNAME_S      := $(shell uname -s)
+IS_WINDOWS   := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))$(filter Windows_NT,$(OS))
+
+ifeq ($(IS_WINDOWS),)
+    TARGET_EXT       :=
+    LIBS_PLATFORM    := -lGL
+    LDFLAGS_PLATFORM := -pie -Wl,-z,relro,-z,now
+else
+    TARGET_EXT       := .exe
+    LIBS_PLATFORM    := -lOPENGL32
+    LDFLAGS_PLATFORM := -Wl,--dynamicbase,--nxcompat
+endif
+
+LIBS := $(LIBS_COMMON) $(LIBS_PLATFORM)
+
+TARGET_EXE := $(BIN_DIR)/space-invaders$(TARGET_EXT)
 
 .PHONY: all linux msys2 export run clean setup-deb setup-arch setup-msys2
 
-all: linux
+all: $(TARGET_EXE)
 
-linux: LIBS = $(LIBS_LINUX)
-msys2: LIBS = $(LIBS_MSYS2)
-linux msys2: $(TARGET_EXE)
+linux msys2: all
 
 $(TARGET_EXE): $(SOURCES_CPP) $(SOURCES_C) | $(BIN_DIR)
-	@echo "==> Compilando para o alvo '$(MAKECMDGOALS)'..."
+	@echo "==> Compilando para o alvo '$(UNAME_S)'..."
 	@echo "==> Usando bibliotecas: $(LIBS)"
-	$(CXX) $(CXXFLAGS) $(WFLAGS) $(CPPFLAGS) $(SOURCES_CPP) $(SOURCES_C) $(LDFLAGS) $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(WFLAGS) $(CPPFLAGS) $(SOURCES_CPP) $(SOURCES_C) $(LDFLAGS) $(LDFLAGS_PLATFORM) $(LIBS) -o $@
 	@echo "==> Executável criado com sucesso em '$@'!"
 
 $(BIN_DIR):
@@ -45,7 +57,7 @@ $(BIN_DIR):
 
 export: all
 	@echo "==> Exportando dependências MSYS2..."
-	msys-export.cmd "$(TARGET_EXE).exe" --dest "$(BIN_DIR)" --msys "ucrt64" --hide
+	msys-export.cmd "$(TARGET_EXE)" --dest "$(BIN_DIR)" --msys "ucrt64" --hide
 
 run: all
 	@echo "==> Executando o programa..."
@@ -57,48 +69,65 @@ clean:
 	@echo "==> Limpeza concluída."
 
 setup-deb:
+	@echo "==> Atualizando repositórios..."
+	sudo apt update
 	@echo "==> Baixando SDL3..."
-	sudo apt install -y libsdl3-dev
+	sudo apt install -y \
+		libsdl3-dev
 	@echo "==> Baixando OpenGL..."
-	sudo apt install -y libglm-dev
-	sudo apt install -y libcglm-dev
+	sudo apt install -y \
+		libglm-dev \
+		libcglm-dev
 	@echo "==> Baixando OpenAL..."
-	sudo apt install -y libopenal-dev
+	sudo apt install -y \
+		libopenal-dev
 	@echo "==> Baixando OpenCL..."
-	sudo apt install -y opencl-headers
-	sudo apt install -y ocl-icd-opencl-dev
-	sudo apt install -y libclc-19
+	sudo apt install -y \
+		opencl-headers \
+		ocl-icd-opencl-dev \
+		libclc-19
 	@echo "==> Baixando FreeType..."
-	sudo apt install -y libfreetype-dev
+	sudo apt install -y \
+		libfreetype-dev
 
 setup-arch:
 	@echo "==> Baixando SDL3..."
-	yay --needed --noconfirm -S sdl3
+	yay --needed --noconfirm -S \
+		sdl3
 	@echo "==> Baixando OpenGL..."
-	yay --needed --noconfirm -S glm
-	yay --needed --noconfirm -S cglm
+	yay --needed --noconfirm -S \
+		glm \
+		cglm
 	@echo "==> Baixando OpenAL..."
-	yay --needed --noconfirm -S openal
+	yay --needed --noconfirm -S \
+		openal
 	@echo "==> Baixando OpenCL..."
-	yay --needed --noconfirm -S opencl-headers
-	yay --needed --noconfirm -S opencl-clhpp
-	yay --needed --noconfirm -S opencl-icd-loader
-	yay --needed --noconfirm -S libclc
+	yay --needed --noconfirm -S \
+		opencl-headers \
+		opencl-clhpp \
+		opencl-icd-loader \
+		libclc
 	@echo "==> Baixando FreeType..."
-	yay --needed --noconfirm -S freetype2
+	yay --needed --noconfirm -S \
+		freetype2
 
 setup-msys2:
 	@echo "==> Baixando SDL3..."
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-sdl3
+	pacman --needed --noconfirm -S \
+		mingw-w64-ucrt-x86_64-sdl3
 	@echo "==> Baixando OpenGL..."
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-glm
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-cglm
+	pacman --needed --noconfirm -S \
+		mingw-w64-ucrt-x86_64-glm \
+		mingw-w64-ucrt-x86_64-cglm
 	@echo "==> Baixando OpenAL..."
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-openal
+	pacman --needed --noconfirm -S \
+		mingw-w64-ucrt-x86_64-openal
 	@echo "==> Baixando OpenCL..."
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-opencl-headers
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-opencl-clhpp
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-opencl-icd
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-libclc
+	pacman --needed --noconfirm -S \
+		mingw-w64-ucrt-x86_64-opencl-headers \
+		mingw-w64-ucrt-x86_64-opencl-clhpp \
+		mingw-w64-ucrt-x86_64-opencl-icd \
+		mingw-w64-ucrt-x86_64-libclc
 	@echo "==> Baixando FreeType..."
-	pacman --needed --noconfirm -S mingw-w64-ucrt-x86_64-freetype
+	pacman --needed --noconfirm -S \
+		mingw-w64-ucrt-x86_64-freetype
